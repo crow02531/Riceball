@@ -1,2 +1,2 @@
-# Onigiri
+# Riceball
 Wolftail + ShinColle

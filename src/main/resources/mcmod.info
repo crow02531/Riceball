@@ -1,0 +1,16 @@
+[
+{
+  "modid": "riceball",
+  "name": "Riceball",
+  "description": "Wolftail powered ShinColle.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["crow02531"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
