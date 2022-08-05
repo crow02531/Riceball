@@ -1,16 +1,13 @@
 [
-{
-  "modid": "riceball",
-  "name": "Riceball",
-  "description": "Wolftail powered ShinColle.",
-  "version": "${version}",
-  "mcversion": "${mcversion}",
-  "url": "",
-  "updateUrl": "",
-  "authorList": ["crow02531"],
-  "credits": "",
-  "logoFile": "",
-  "screenshots": [],
-  "dependencies": []
-}
+  {
+    "modid": "riceball",
+
+    "name": "Riceball",
+    "description": "Wolftail powered ShinColle.",
+    "url": "https://crow02531.github.io/Riceball",
+    "authorList": ["crow02531"],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": []
+  }
 ]

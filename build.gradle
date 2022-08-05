@@ -11,6 +11,7 @@ buildscript {
 
 repositories {
     maven { url = 'https://cursemaven.com' }
+    mavenLocal()
 }
 
 apply plugin: 'net.minecraftforge.gradle'
@@ -49,7 +50,7 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             arg '-torg.spongepowered.asm.launch.MixinTweaker'
-            arg '-username=Steve001'
+            arg '-username=Ship001'
         }
 
         server {
@@ -76,7 +77,7 @@ dependencies {
     // compile "some.group:artifact:version"
 
     compile 'org.spongepowered:mixin:0.8.2'
-    compile files('libs/wolftail-1.12.2-0.1.0.jar')
+    compile 'net.wolftail:wolftail-1.12.2:0.2.1'
     compile fg.deobf('curse.maven:shincolle-511820:3490446')
 
     // Real examples
