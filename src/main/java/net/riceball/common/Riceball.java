@@ -8,6 +8,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.InstanceFactory;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.riceball.client.ClientHandler;
+import net.wolftail.api.Introduction;
 import net.wolftail.api.UniversalPlayerType;
 import net.wolftail.api.lifecycle.PhysicalType;
 
@@ -23,8 +24,10 @@ public final class Riceball {
 	public static final Riceball INSTANCE = new Riceball();
 	
 	public static final ResourceLocation TYPE_SHIP_ID = new ResourceLocation(MOD_ID, "ship");
-	public static final UniversalPlayerType TYPE_SHIP = UniversalPlayerType
-			.create(ServerHandler.INSTANCE, PhysicalType.INTEGRATED_CLIENT.is() ? ClientHandler.INSTANCE : null)
+	public static final UniversalPlayerType TYPE_SHIP = UniversalPlayerType.create(
+			new Introduction("utype.riceball.ship.name", "utype.riceball.ship.desc",
+					"riceball:textures/misc/utype/ship.json"),
+			ServerHandler.INSTANCE, PhysicalType.INTEGRATED_CLIENT.is() ? ClientHandler.INSTANCE : null)
 			.setRegistryName(TYPE_SHIP_ID);
 	
 	private Riceball() {

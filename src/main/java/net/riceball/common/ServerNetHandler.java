@@ -8,7 +8,9 @@ import com.lulan.shincolle.reference.Reference;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.EntityList;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.ForgeHooks;
 import net.wolftail.api.INetworkHandler;
 import net.wolftail.api.PlayContext;
 import net.wolftail.util.MoreByteBufs;
@@ -19,6 +21,9 @@ class ServerNetHandler implements INetworkHandler {
 	final PlayContext context;
 	
 	private BasicEntityShip ship;
+	
+	private float travel;
+	private float turn;
 	
 	ServerNetHandler(PlayContext c) {
 		this.context = c;
@@ -41,9 +46,8 @@ class ServerNetHandler implements INetworkHandler {
 		this.ship = null;
 	}
 	
-	@Override
-	public void handle(ByteBuf buf) {
-		switch (MoreByteBufs.readVarInt(buf)) {
+	void applyEmotion(int type) {
+		switch (type) {
 		case 1:
 			this.ship.reactionStranger();
 			break;
@@ -67,12 +71,48 @@ class ServerNetHandler implements INetworkHandler {
 		}
 	}
 	
+	void applyTravel(float arg) {
+		this.travel = arg;
+	}
+	
+	void applyTurn(float arg) {
+		this.turn = arg;
+	}
+	
+	void applyJump() {
+		this.ship.getJumpHelper().setJumping();
+	}
+	
+	void say(String s) {
+		MoreServers.serverInstance().getPlayerList().sendMessage(
+				new TextComponentTranslation("chat.type.text", this.context.playName(), ForgeHooks.newChatWithLinks(s)),
+				false);
+	}
+	
+	@Override
+	public void handle(ByteBuf buf) {
+		PacketOperation.values()[MoreByteBufs.readVarInt(buf)].process(buf, this);
+	}
+	
 	@Override
 	public void tick() {
-		if (this.ship.isDead)
-			this.joinWorld();
+		BasicEntityShip e = this.ship;
 		
-		if (this.ship.getGrudge() <= 0)
-			this.ship.addGrudge(1000);
+		if (e.isDead) {
+			this.joinWorld();
+			
+			e = this.ship;
+		}
+		
+		e.tasks.taskEntries.clear();
+		
+		if (e.getGrudge() <= 0)
+			e.addGrudge(1000);
+		
+		if (this.travel != 0.0F)
+			e.travel(0, 0, this.travel);
+		
+		e.rotationYaw += this.turn;
+		e.rotationYawHead = e.rotationYaw;
 	}
 }
