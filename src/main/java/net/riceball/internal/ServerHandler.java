@@ -1,4 +1,4 @@
-package net.riceball.common;
+package net.riceball.internal;
 
 import net.wolftail.api.IServerHandler;
 import net.wolftail.api.PlayContext;
@@ -12,7 +12,7 @@ public final class ServerHandler implements IServerHandler {
 	
 	@Override
 	public void handleEnter(PlayContext context) {
-		ServerNetHandler sh = new ServerNetHandler(context);
+		ServerNetworkHandler sh = new ServerNetworkHandler(context);
 		
 		context.setHandler(sh);
 		sh.joinWorld();
@@ -20,6 +20,6 @@ public final class ServerHandler implements IServerHandler {
 	
 	@Override
 	public void handleLeave(PlayContext context) {
-		((ServerNetHandler) context.getHandler()).leaveWorld();
+		((ServerNetworkHandler) context.getHandler()).leaveWorld();
 	}
 }

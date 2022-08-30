@@ -1,18 +1,15 @@
-package net.riceball.common;
+package net.riceball;
 
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.InstanceFactory;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.riceball.client.ClientHandler;
+import net.riceball.internal.ClientHandler;
+import net.riceball.internal.ServerHandler;
 import net.wolftail.api.Introduction;
 import net.wolftail.api.UniversalPlayerType;
 import net.wolftail.api.lifecycle.PhysicalType;
 
-@EventBusSubscriber
 @Mod(modid = Riceball.MOD_ID, version = Riceball.MOD_VERSION, acceptedMinecraftVersions = Riceball.MC_VERSION)
 public final class Riceball {
 	
@@ -24,10 +21,9 @@ public final class Riceball {
 	public static final Riceball INSTANCE = new Riceball();
 	
 	public static final ResourceLocation TYPE_SHIP_ID = new ResourceLocation(MOD_ID, "ship");
-	public static final UniversalPlayerType TYPE_SHIP = UniversalPlayerType.create(
-			new Introduction("utype.riceball.ship.name", "utype.riceball.ship.desc",
-					"riceball:textures/misc/utype/ship.json"),
-			ServerHandler.INSTANCE, PhysicalType.INTEGRATED_CLIENT.is() ? ClientHandler.INSTANCE : null)
+	public static final UniversalPlayerType TYPE_SHIP = UniversalPlayerType.create(ServerHandler.INSTANCE,
+			PhysicalType.INTEGRATED_CLIENT.is() ? ClientHandler.INSTANCE : null, new Introduction(
+					"utype.riceball.ship.name", "utype.riceball.ship.desc", "riceball:textures/misc/utype/ship.json"))
 			.setRegistryName(TYPE_SHIP_ID);
 	
 	private Riceball() {
@@ -39,10 +35,5 @@ public final class Riceball {
 		Loader.instance().activeModContainer().getMetadata().version = MOD_VERSION;
 		
 		return INSTANCE;
-	}
-	
-	@SubscribeEvent
-	public static void event_registerUniplayerTypes(RegistryEvent.Register<UniversalPlayerType> e) {
-		e.getRegistry().register(TYPE_SHIP);
 	}
 }

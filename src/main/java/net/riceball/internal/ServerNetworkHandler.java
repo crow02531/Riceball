@@ -1,4 +1,4 @@
-package net.riceball.common;
+package net.riceball.internal;
 
 import com.lulan.shincolle.crafting.ShipCalc;
 import com.lulan.shincolle.entity.BasicEntityShip;
@@ -16,7 +16,7 @@ import net.wolftail.api.PlayContext;
 import net.wolftail.util.MoreByteBufs;
 import net.wolftail.util.MoreServers;
 
-class ServerNetHandler implements INetworkHandler {
+public class ServerNetworkHandler implements INetworkHandler {
 	
 	final PlayContext context;
 	
@@ -25,7 +25,7 @@ class ServerNetHandler implements INetworkHandler {
 	private float travel;
 	private float turn;
 	
-	ServerNetHandler(PlayContext c) {
+	ServerNetworkHandler(PlayContext c) {
 		this.context = c;
 	}
 	
