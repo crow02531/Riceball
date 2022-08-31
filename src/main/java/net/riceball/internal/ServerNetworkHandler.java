@@ -8,11 +8,13 @@ import com.lulan.shincolle.reference.Reference;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.EntityList;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.ForgeHooks;
 import net.wolftail.api.INetworkHandler;
 import net.wolftail.api.PlayContext;
+import net.wolftail.api.RootPlayContextManager;
 import net.wolftail.util.MoreByteBufs;
 import net.wolftail.util.MoreServers;
 
@@ -84,9 +86,9 @@ public class ServerNetworkHandler implements INetworkHandler {
 	}
 	
 	void say(String s) {
-		MoreServers.serverInstance().getPlayerList().sendMessage(
-				new TextComponentTranslation("chat.type.text", this.context.playName(), ForgeHooks.newChatWithLinks(s)),
-				false);
+		RootPlayContextManager.instanceFor(MoreServers.serverInstance()).sendChat(ChatType.CHAT,
+				new TextComponentTranslation("chat.type.text", this.context.playName(),
+						ForgeHooks.newChatWithLinks(s)));
 	}
 	
 	@Override

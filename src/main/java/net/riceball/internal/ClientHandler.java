@@ -55,8 +55,6 @@ public final class ClientHandler implements IClientHandler, INetworkHandler {
 		
 		ui.pPrint(c.playName());
 		ui.pPrintln(" joined the world. Happy playing!");
-		
-		printPrefix();
 	}
 	
 	@Override
@@ -82,7 +80,10 @@ public final class ClientHandler implements IClientHandler, INetworkHandler {
 	
 	@Override
 	public void handleChat(ChatType type, ITextComponent text) {
-		
+		this.ui.pPrint(TextFormatting.YELLOW);
+		this.ui.pPrint("Chat: ");
+		this.ui.pPrint(TextFormatting.WHITE);
+		this.ui.pPrintln(text.getFormattedText());
 	}
 	
 	@Override
@@ -111,7 +112,6 @@ public final class ClientHandler implements IClientHandler, INetworkHandler {
 						this.kctrlEnable = false;
 						
 						this.ui.pPrintln("Keyboard control mode disable. Press 'esc' again to quit game.");
-						this.printPrefix();
 					}
 					
 					break;
@@ -144,9 +144,13 @@ public final class ClientHandler implements IClientHandler, INetworkHandler {
 					break;
 				case Keyboard.KEY_RETURN:
 					if (this.commandBuf.length() != 0) {
-						this.ui.pPrintln();
+						String command = this.commandBuf.toString();
 						
-						this.executeCommand(this.commandBuf.toString());
+						this.ui.pPrint(this.context.playName());
+						this.ui.pPrint(">");
+						this.ui.pPrintln(command);
+						this.executeCommand(command);
+						
 						this.commandBuf.setLength(0);
 					}
 					
@@ -154,13 +158,8 @@ public final class ClientHandler implements IClientHandler, INetworkHandler {
 				default:
 					char c = Keyboard.getEventCharacter();
 					
-					if (ChatAllowedCharacters.isAllowedCharacter(c)) {
-						if (this.commandBuf.length() == 0)
-							this.ui.pPrint(TextFormatting.YELLOW);
-						
+					if (ChatAllowedCharacters.isAllowedCharacter(c))
 						this.commandBuf.append(c);
-						this.ui.pPrint(c);
-					}
 				}
 			}
 		}
@@ -177,18 +176,8 @@ public final class ClientHandler implements IClientHandler, INetworkHandler {
 			String said = cmd.substring(4).trim();
 			
 			this.context.send(MoreByteBufs.writeUTF(said, this.alloc(PacketOperation.SAY)));
-			
-			this.ui.pPrint("You said: ");
-			this.ui.pPrintln(said);
 		} else
 			this.ui.pPrintln("Unknow command.");
-		
-		this.printPrefix();
-	}
-	
-	private void printPrefix() {
-		this.ui.pPrint(this.context.playName());
-		this.ui.pPrint(">");
 	}
 	
 	private ByteBuf alloc(PacketOperation op) {
