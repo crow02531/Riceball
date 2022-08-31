@@ -14,7 +14,7 @@ import net.wolftail.api.lifecycle.PhysicalType;
 public final class Riceball {
 	
 	public static final String MOD_ID = "riceball";
-	public static final String MOD_VERSION = "0.1.0";
+	public static final String MOD_VERSION = "0.1.0-SNAPSHOT";
 	
 	public static final String MC_VERSION = "1.12.2";
 	
