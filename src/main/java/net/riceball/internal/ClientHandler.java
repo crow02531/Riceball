@@ -8,8 +8,9 @@ import org.lwjgl.util.vector.Vector3f;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.util.ChatAllowedCharacters;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
@@ -17,81 +18,96 @@ import net.wolftail.api.IClientHandler;
 import net.wolftail.api.INetworkHandler;
 import net.wolftail.api.PlayContext;
 import net.wolftail.util.MoreByteBufs;
-import net.wolftail.util.client.renderer.CmdUnit;
+import net.wolftail.util.client.renderer.LogUnit;
 
 public final class ClientHandler implements IClientHandler, INetworkHandler {
 	
 	public static final ClientHandler INSTANCE = new ClientHandler();
 	
+	private static final int INPUT_HEIGHT = 13;
+	
 	private PlayContext context;
-	private CmdUnit ui;
 	
-	private boolean kctrlEnable;
-	
-	private StringBuilder commandBuf;
+	private LogUnit log;
+	private GuiTextField input;
 	
 	private ClientHandler() {
 	}
 	
 	@Override
 	public void handleEnter(PlayContext c) {
+		int w = calcWidth();
+		int h = calcHeight();
+		
 		context = c;
-		ui = new CmdUnit(calcWidth(), calcHeight());
-		commandBuf = new StringBuilder();
-		kctrlEnable = false;
+		log = new LogUnit(w * 2, (h - INPUT_HEIGHT) * 2);
+		input = new GuiTextField(0, Minecraft.getMinecraft().fontRenderer, 1, h - INPUT_HEIGHT, w - 2,
+				INPUT_HEIGHT - 1);
+		input.setCanLoseFocus(false);
 		
 		c.setHandler(this);
 		
-		ui.pPrint(TextFormatting.GREEN);
-		ui.pPrintln("===================================");
-		ui.pPrint(TextFormatting.GREEN);
-		ui.pPrintln("Enter 'ctrl' to enable keyboard control");
-		ui.pPrint(TextFormatting.GREEN);
-		ui.pPrintln("mode. Press 'esc' to disable. Press again");
-		ui.pPrint(TextFormatting.GREEN);
-		ui.pPrintln("to quit game.");
-		ui.pPrint(TextFormatting.GREEN);
-		ui.pPrintln("===================================");
+		log.pPrint(TextFormatting.GREEN);
+		log.pPrintln("===================================");
+		log.pPrint(TextFormatting.GREEN);
+		log.pPrintln("Enter 'ctrl' to enable keyboard control");
+		log.pPrint(TextFormatting.GREEN);
+		log.pPrintln("mode. Press 'esc' to disable. Press again");
+		log.pPrint(TextFormatting.GREEN);
+		log.pPrintln("to quit game.");
+		log.pPrint(TextFormatting.GREEN);
+		log.pPrintln("===================================");
 		
-		ui.pPrint(c.playName());
-		ui.pPrintln(" joined the world. Happy playing!");
+		log.pPrint(c.playName());
+		log.pPrintln(" joined the world. Happy playing!");
+		
+		this.leaveKctrlMode();
 	}
 	
 	@Override
 	public void handleFrame() {
-		Mouse.setGrabbed(this.kctrlEnable);
+		int w = calcWidth();
+		int h = calcHeight();
 		
-		if (Display.wasResized())
-			this.ui.resize(calcWidth(), calcHeight());
+		if (Display.wasResized()) {
+			this.log.resize(w * 2, (h - INPUT_HEIGHT) * 2);
+			
+			this.input.y = h - INPUT_HEIGHT;
+			this.input.width = w - 2;
+		}
 		
-		GlStateManager.clearColor(0, 0, 0, 1);
-		GlStateManager.clearDepth(1);
 		GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		
 		GlStateManager.matrixMode(GL11.GL_PROJECTION);
 		GlStateManager.loadIdentity();
-		GlStateManager.ortho(0, 1, 1, 0, -1, 1);
+		GlStateManager.ortho(0, w, h, 0, -1, 1);
 		GlStateManager.matrixMode(GL11.GL_MODELVIEW);
 		GlStateManager.loadIdentity();
 		
-		this.ui.flush();
-		this.ui.render(new Vector3f(0, 1, 0), new Vector3f(1, 1, 0), new Vector3f(1, 0, 0), new Vector3f(0, 0, 0));
+		this.log.flush();
+		this.log.render(new Vector3f(0, h - INPUT_HEIGHT, 0), new Vector3f(w, h - INPUT_HEIGHT, 0),
+				new Vector3f(w, 0, 0), new Vector3f(0, 0, 0));
+		
+		this.input.drawTextBox();
 	}
 	
 	@Override
 	public void handleChat(ChatType type, ITextComponent text) {
-		this.ui.pPrint(TextFormatting.YELLOW);
-		this.ui.pPrint("Chat: ");
-		this.ui.pPrint(TextFormatting.WHITE);
-		this.ui.pPrintln(text.getFormattedText());
+		this.log.pPrint(TextFormatting.YELLOW);
+		this.log.pPrint("Chat: ");
+		this.log.pPrint(TextFormatting.WHITE);
+		this.log.pPrintln(text.getFormattedText());
 	}
 	
 	@Override
 	public void handleLeave() {
-		this.ui.release();
-		this.ui = null;
+		this.log.release();
+		this.log = null;
+		this.input = null;
 		this.context = null;
-		this.commandBuf = null;
+		
+		Mouse.setGrabbed(false);
+		Keyboard.enableRepeatEvents(false);
 	}
 	
 	@Override
@@ -101,17 +117,33 @@ public final class ClientHandler implements IClientHandler, INetworkHandler {
 	
 	@Override
 	public void tick() {
+		this.input.updateCursorCounter();
+		
+		while (Mouse.next()) {
+			if (Mouse.getEventButtonState()) {
+				int i = Mouse.getEventX() >> 1;
+				int j = (Minecraft.getMinecraft().displayHeight - Mouse.getEventY()) >> 1;
+				
+				this.input.mouseClicked(i, j, Mouse.getEventButton());
+			}
+			
+			int i = Mouse.getEventDWheel();
+			
+			if (i != 0)
+				this.log.pScrollMov(-MathHelper.clamp(i, -1, 1) * 2);
+		}
+		
 		while (Keyboard.next()) {
 			int key = Keyboard.getEventKey();
 			boolean pressed = Keyboard.getEventKeyState();
 			
-			if (this.kctrlEnable) {
+			if (!this.input.isFocused()) {
 				switch (key) {
 				case Keyboard.KEY_ESCAPE:
 					if (pressed) {
-						this.kctrlEnable = false;
+						this.leaveKctrlMode();
 						
-						this.ui.pPrintln("Keyboard control mode disable. Press 'esc' again to quit game.");
+						this.log.pPrintln("Keyboard control mode disable. Press 'esc' again to quit game.");
 					}
 					
 					break;
@@ -136,48 +168,65 @@ public final class ClientHandler implements IClientHandler, INetworkHandler {
 					if (Keyboard.KEY_1 <= key && key <= Keyboard.KEY_0 && pressed)
 						this.context.send(MoreByteBufs.writeVarInt(key - 1, this.alloc(PacketOperation.EMOTION)));
 				}
-			} else if (pressed) {
-				switch (key) {
-				case Keyboard.KEY_ESCAPE:
-					this.context.disconnect();
-					
-					break;
-				case Keyboard.KEY_RETURN:
-					if (this.commandBuf.length() != 0) {
-						String command = this.commandBuf.toString();
+			} else {
+				if (pressed) {
+					switch (key) {
+					case Keyboard.KEY_ESCAPE:
+						this.context.disconnect();
 						
-						this.ui.pPrint(this.context.playName());
-						this.ui.pPrint(">");
-						this.ui.pPrintln(command);
-						this.executeCommand(command);
+						break;
+					case Keyboard.KEY_RETURN:
+						String command = this.input.getText();
 						
-						this.commandBuf.setLength(0);
+						if (!command.isEmpty()) {
+							this.log.pPrint(this.context.playName());
+							this.log.pPrint(">");
+							this.log.pPrintln(command);
+							
+							this.executeCommand(command);
+							
+							this.input.setText("");
+						}
+						
+						break;
 					}
-					
-					break;
-				default:
-					char c = Keyboard.getEventCharacter();
-					
-					if (ChatAllowedCharacters.isAllowedCharacter(c))
-						this.commandBuf.append(c);
 				}
+				
+				char c = Keyboard.getEventCharacter();
+				
+				if (key == 0 && c >= ' ' || pressed)
+					this.input.textboxKeyTyped(c, key);
 			}
 		}
 	}
 	
 	private void executeCommand(String cmd) {
 		if (cmd.equals("ctrl")) {
-			this.kctrlEnable = true;
+			this.enterKctrlMode();
 			
-			this.ui.pPrintln("Keyboard control mode enable. Press 'esc' to disable.");
-			
-			return;
+			this.log.pPrintln("Keyboard control mode enable. Press 'esc' to disable.");
 		} else if (cmd.startsWith("say ")) {
 			String said = cmd.substring(4).trim();
 			
 			this.context.send(MoreByteBufs.writeUTF(said, this.alloc(PacketOperation.SAY)));
-		} else
-			this.ui.pPrintln("Unknow command.");
+		} else if (cmd.equals("cls"))
+			this.log.pClear();
+		else
+			this.log.pPrintln("Unknow command.");
+	}
+	
+	private void enterKctrlMode() {
+		this.input.setFocused(false);
+		
+		Keyboard.enableRepeatEvents(false);
+		Mouse.setGrabbed(true);
+	}
+	
+	private void leaveKctrlMode() {
+		this.input.setFocused(true);
+		
+		Keyboard.enableRepeatEvents(true);
+		Mouse.setGrabbed(false);
 	}
 	
 	private ByteBuf alloc(PacketOperation op) {
